@@ -56,17 +56,34 @@ def update_content(all_inspo: list, all_gsc: list, inspo):
             else:
                 return True
 
+    def update_content(word:str, url:str):
+        for row in all_inspo:
+            res = check_description(row, word)
+            if (res != None):
+                if (row["Updated Content"] != "") or (row["Anchor Text"]):
+                    continue
+                if check_url(row):
+                    url_groupe_id = re.findall(r"[0-9]{4}", url)[0]
+                    row_post_collections = re.findall(r"[0-9]{4}", row["Collections"])                
+                    if url_groupe_id not in row_post_collections:
+                        print(row["row"], res)
+                        print(url_groupe_id)
+                        print(row_post_collections)
+                        inspo.write_cell(int(row["row"]) + 1, 11, str(res[0]))
+                        row["Anchor Text"] = str(res[0])
+                        string = f"<a href='{url}'>{str(res[0])}</a>"
+                        row["Updated Content"] = row["Site description"].replace(str(res[0]), string)
+                        inspo.write_cell(int(row["row"]) + 1, 12, row["Updated Content"])
+                        break                    
+
     # query and url
-    word = fr"(?i){all_gsc[1]['query']}"
-    word = fr"(?i)behind these"
-    url = all_gsc[1]["url"]
+    for i in all_gsc:
+        word = fr"(?i){i['query']}\W"
+        url = i["url"]
+        print(word)
+        update_content(word, url)
     
-    for row in all_inspo:
-        res = check_description(row, word)
-        if res != None:
-            print(row["row"], res)
-            print(check_url(row))
-            
+
 
 
 def main():
