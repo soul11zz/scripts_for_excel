@@ -1,5 +1,6 @@
 from ExcelClass import Excel, AllInspoExport, GSC
 import re
+import sys
 
 
 # algo
@@ -25,16 +26,23 @@ import re
 
 def from_to(data: list, obj):
     pattern = "[0-9]{4}"
+    from_to_num = 0
     for i in data:
+        if i["Collections"] == None: continue
+        if i["Content"] == None: continue
         collections = re.findall(pattern, i["Collections"])
         m = re.findall(pattern, i["Content"])
         if m:
             x = " ".join(collections)
             i["From to"] = f"from {x} to {m[0]}"
             obj.write_cell(int(i["row"]) + 1, 13, i["From to"])
+            from_to_num += 1
 
+    obj.save_file()
+    return from_to_num
 
 def update_content(all_inspo: list, all_gsc: list, inspo):
+    updated_content = 0
     def check_description(row: dict, pattern: str):
         # should fix decor in decorator it shouldn't be find
         if type(row["Site description"]) == str:
@@ -60,8 +68,7 @@ def update_content(all_inspo: list, all_gsc: list, inspo):
         for row in all_inspo:
             res = check_description(row, word)
             if (res != None):
-                if (row["Updated Content"] != "") or (row["Anchor Text"]):
-                    continue
+                if (row["Anchor Text"] != None): continue
                 if check_url(row):
                     url_groupe_id = re.findall(r"[0-9]{4}", url)[0]
                     row_post_collections = re.findall(r"[0-9]{4}", row["Collections"])                
@@ -74,20 +81,28 @@ def update_content(all_inspo: list, all_gsc: list, inspo):
                         string = f"<a href='{url}'>{str(res[0])}</a>"
                         row["Updated Content"] = row["Site description"].replace(str(res[0]), string)
                         inspo.write_cell(int(row["row"]) + 1, 12, row["Updated Content"])
-                        break                    
+                        return 1
+        return 0
+                                                 
 
     # query and url
     for i in all_gsc:
+        print(i["row"])
         word = fr"(?i){i['query']}\W"
         url = i["url"]
-        print(word)
-        update_content(word, url)
+        try:
+            updated_content += update_content(word, url)
+        except: continue
+            
+    inspo.save_file()
+    return updated_content
     
 
 
 
-def main():
-    name="Halloween Internal Links.xlsx"
+def main(args: str):
+### name="Halloween Internal Links.xlsx"
+    name = args
     ignore_rows_list = []
 
     def get_data_from_excel(obj):
@@ -98,12 +113,19 @@ def main():
     print("Main file is run")
     all_inspo, inspo = get_data_from_excel(AllInspoExport)
     all_gsc, _ = get_data_from_excel(GSC)
-    update_content(all_inspo, all_gsc, inspo)
+
+    from_to_num = from_to(all_inspo, inspo)
+    print("from_to : " + str(from_to_num))
 
 
-    from_to(all_inspo, inspo)              
-    inspo.save_file()
+    updated_content = update_content(all_inspo, all_gsc, inspo)
+    
+
+    
+    print("from_to : " + str(from_to_num))
+    print("updated content : " + str(updated_content))
+
     
             
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1])
