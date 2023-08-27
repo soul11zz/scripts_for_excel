@@ -23,6 +23,37 @@ class Excel:
     def save_file(self):
         self.wb.save(f"./{self.fileName}.xlsx")
 
+
+class FT(Excel):
+    def open_file(self):
+        self.wb = openpyxl.load_workbook(f"./{self.fileName}.xlsx")
+        self.wb.create_sheet(index=3, title="From To")
+        self.ws = self.wb['From To']
+        self._print_rows()
+    
+    def get_dict_data(self):
+        data = self._iter_rows()
+        res = []
+        x = 0
+        for i in data:
+            res.append({
+                "row": x, 
+                "from" : i[0],
+                "to": i[1]
+            })
+            x+=1
+        return res
+
+    def write_data(self, data: list):
+        header = ["From", "To"]
+        self.ws.append(header)
+
+        for i in data:
+            self.ws.append(i)
+
+        self.save_file()
+        
+
 class GSC(Excel):
     def open_file(self):
         self.wb = openpyxl.load_workbook(f"./{self.fileName}.xlsx")
@@ -42,7 +73,7 @@ class GSC(Excel):
             x+=1
         return res
         
-
+        
     
 class AllInspoExport(Excel):
     def open_file(self):
@@ -50,7 +81,6 @@ class AllInspoExport(Excel):
         self.ws = self.wb['All-Inspo-Export']
         self._print_rows()
 
-    
     def get_dict_data(self):
         data = self._iter_rows()
         res = []
