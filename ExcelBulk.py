@@ -33,7 +33,7 @@ class SP1(Excel):
         data = self._iter_rows()
         res = []
         x = 0
-        headers = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'aa', 'ab', 'ac', 'ad', 'ae', 'af', 'ag', 'ah', 'ai', 'aj', 'ak', 'al', 'am', 'an', 'ao', 'ap', 'aq', 'ar', 'as', 'at', 'au', 'av', 'aw', 'ax']
+        headers = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'aa', 'ab', 'ac', 'ad', 'ae', 'af', 'ag', 'ah', 'ai', 'aj', 'ak', 'al', 'am', 'an', 'ao', 'ap', 'aq', 'ar', 'as', 'at', 'au', 'av', 'aw', 'ax', 'ay']
         for i in data[1:]:
             data_dict = {}
             pos = 0
@@ -130,6 +130,17 @@ class SP1(Excel):
                 return_data.append(row)
 
         return return_data
+
+    def sorting_six(self, data: dict):
+        return_data = []
+        for row in data:
+            if row["data"]["au"] != None:
+                if row["data"]["au"] != "":
+                    return_data.append(row)
+        
+        return return_data
+        
+        
     
     def _check_coll(self, dictionary: dict, coll: str, coll_data: str):
         if dictionary["data"][coll] == coll_data: return True
@@ -138,26 +149,80 @@ class SP1(Excel):
     def writelist_row_newbid(self, data_list: list, type_of_coll: int):
         if self.ws["AU1"] != "New Bid":
             self.ws["AU1"] = "New Bid"
-        if self.ws["AV1"] != "New Ad Group Default Bid":
-            self.ws["AV1"] = "New Ad Group Default Bid"
-        if self.ws["AW1"] != "Placement Percentage":
-            self.ws["AW1"] = "Placement Percentage"
-        if self.ws["AX1"] != "New State":
-            self.ws["AX1"] = "New State"
+        if self.ws["AV1"] != "Percent change":
+            self.ws["AV1"] = "Percent change"
+      
+        if self.ws["AW1"] != "New Ad Group Default Bid":
+            self.ws["AW1"] = "New Ad Group Default Bid"
+        if self.ws["AX1"] != "Placement Percentage":
+            self.ws["AX1"] = "Placement Percentage"
+        if self.ws["AY1"] != "New State":
+            self.ws["AY1"] = "New State"
 
         if type_of_coll == 1:
             for i in data_list:
                 self.ws[f"AU{i[0]}"] = i[-1]
         if type_of_coll == 2:
             for i in data_list:
-                self.ws[f"AV{i[0]}"] = i[-1]
+                self.ws[f"AW{i[0]}"] = i[-1]
         if type_of_coll == 3:
             for i in data_list:
-                self.ws[f"AW{i[0]}"] = i[-1]
+                self.ws[f"AX{i[0]}"] = i[-1]
         if type_of_coll == 4:
             for i in data_list:
-                self.ws[f"AX{i[0]}"] = i[-1]
+                self.ws[f"AY{i[0]}"] = i[-1]
+        if type_of_coll == 5:
+            for i in data_list:
+                self.ws[f"AV{i[0]}"] = i[-1]
 
     def save_file(self):
         script_directory = os.path.dirname(os.path.abspath(sys.argv[0]))
         self.wb.save(f"{script_directory}/{self.fileName}.xlsx")
+
+
+class SDC(SP1):
+    # AQ = %
+    # AR = %
+    # AL = %
+    
+    def open(self):
+        script_directory = os.path.dirname(os.path.abspath(sys.argv[0]))
+        self.wb = openpyxl.load_workbook(f"{script_directory}/{self.fileName}.xlsx")
+        self.ws = self.wb['Sponsored Display Campaigns']
+        self._print_rows()
+
+    def writelist_row_newbid(self, data_list: list, type_of_coll: int):
+        if self.ws["AP1"] != "New State":
+            self.ws["AP1"] = "New State"
+
+        if type_of_coll == 1:
+            for i in data_list:
+                self.ws[f"AP{i[0]}"] = i[-1]
+
+    def get_dict_data(self):
+        data = self._iter_rows()
+        res = []
+        x = 0
+        headers = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'aa', 'ab', 'ac', 'ad', 'ae', 'af', 'ag', 'ah', 'ai', 'aj', 'ak', 'al', 'am', 'an', 'ao', 'ap']
+        for i in data[1:]:
+            data_dict = {}
+            pos = 0
+            for j in i:
+                data_dict[headers[pos]] = j
+                pos +=1
+
+            res.append({
+                "row": x,
+                "data" : data_dict
+                })
+            x+=1
+        return res
+
+    def sorting_fifth(self, data: dict):
+        B = "Product Ad"
+        return_data = []
+        for row in data:
+            if self._check_coll(row, 'b', B):
+                return_data.append(row)
+
+        return return_data

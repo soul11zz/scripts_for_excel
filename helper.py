@@ -1,4 +1,4 @@
-from ExcelBulk import SP1, State
+from ExcelBulk import SP1, State, SDC
 import sys
 import os
 import configparser
@@ -157,10 +157,40 @@ def state_work(data: list):
                 print(state[name.index(cell)])
                 print('====================')
                 new_bids.append([int(row["row"]) + 2, row["data"]["ak"], str(state[name.index(cell)][-1])])
+
+def state_work2(data: list):
+    print(len(data))
+    global new_bids
+    state = State("state")
+    state.open()
+    state = state.get_list_data()
+    name = []
+    for i in state:
+        name.append(i[0])
+        
+    for row in data:
+        cell = row["data"]["v"]
+        if cell in name:
+            status = row["data"]["p"]
+            if str(status) != str(state[name.index(cell)][-1]):
+                print(cell, status)
+                print(name[name.index(cell)])
+                print(state[name.index(cell)])
+                print('====================')
+                new_bids.append([int(row["row"]) + 2, row["data"]["ak"], str(state[name.index(cell)][-1])])
+
+
+def calculate_procent_change(data: list):
+    global new_bids
+    for row in data:
+        if row["data"]["ab"] == '':
+            bid = float(row["data"]["aa"])
+        else:
+            bid = float(row["data"]["ab"])
+        newbid = float(row["data"]["au"])
+        d = (newbid - bid) / bid
+        new_bids.append([int(row["row"]) + 2, row["data"]["ak"], str(d)])
             
-    
-    
-    
 def main(arg: str):
     global new_bids, BIDTYPE
     x = SP1(arg)
@@ -196,17 +226,40 @@ def main(arg: str):
     calc = 0
     for i in data:
         if check_placment_acos(i): calc+=1
-    print(calc)
     x.writelist_row_newbid(new_bids, 3)
 
-    
+    # new state for SPC
     data = x.sorting_fifth(r_data)
     new_bids = []
     data = x.sorting_fifth(data)
     state_work(data)
     x.writelist_row_newbid(new_bids, 4)
+    x.save_file()
+
+    # calculate Percent change
+    x = SP1(arg)
+    x.open()
+    new_bids = []
+    r_data = x.get_dict_data()
+    data = x.sorting_six(r_data)
+    print("len of bids ", len(data))
+    calculate_procent_change(data)
+    x.writelist_row_newbid(new_bids, 5)
+    
     
     x.save_file()
+    
+    # new state for SDC
+    c = SDC(arg)
+    c.open()
+    new_bids = []
+    c_data = c.get_dict_data()
+    data = c.sorting_fifth(c_data)
+    state_work2(c_data)
+    c.writelist_row_newbid(new_bids, 1)
+
+    c.save_file()
+
     
 if __name__ == "__main__":
     file_name = input("type your file name: ")
